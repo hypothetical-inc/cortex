@@ -54,9 +54,9 @@ class SearchPathTest( unittest.TestCase ) :
 
 	def testFind( self ) :
 
-		s = IECore.SearchPath( "test/IECore/data/pdcFiles", ":" )
+		s = IECore.SearchPath( os.path.join( "test", "IECore", "data", "pdcFiles" ), ":" )
 
-		self.assertEqual( s.find( "particleShape1.250.pdc" ), "test/IECore/data/pdcFiles/particleShape1.250.pdc" )
+		self.assertEqual( s.find( "particleShape1.250.pdc" ), os.path.join( "test", "IECore", "data", "pdcFiles", "particleShape1.250.pdc" ) )
 
 	def testCopyConstructor( self ) :
 

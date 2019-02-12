@@ -37,6 +37,7 @@
 import unittest
 import warnings
 import sys
+import os
 
 import IECore
 
@@ -160,7 +161,7 @@ unittest.TestProgram(
 		stream = IECore.CompoundStream(
 			[
 				sys.stderr,
-				open( "test/IECore/resultsPython.txt", "w" )
+				open( os.path.join("test", "IECore", "resultsPython.txt"), "w" )
 			]
 		),
 		verbosity = 2
