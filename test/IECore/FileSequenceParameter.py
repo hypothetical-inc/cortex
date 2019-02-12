@@ -42,13 +42,17 @@ class TestFileSequenceParameter( unittest.TestCase ) :
 
 	def mkSequence( self, sequence ) :
 
-		directory = "test/sequences/parameterTest"
+		self.base_path = os.path.join( "test", "sequences", "parameterTest" )
 
-		os.system( "rm -rf " + directory )
-		os.system( "mkdir -p " + directory )
-
+		if os.path.isdir( self.base_path ) :
+			shutil.rmtree( self.base_path )
+		if not os.path.isdir( self.base_path ) :
+			os.makedirs( self.base_path )
+		
 		for f in sequence.fileNames() :
-			os.system( "touch '" + directory + "/" + f + "'" )
+			touch_path = os.path.join( self.base_path, f )
+			with open( touch_path, "a" ):
+				os.utime( touch_path, None )
 
 	def test( self ) :
 
@@ -60,7 +64,7 @@ class TestFileSequenceParameter( unittest.TestCase ) :
 		self.assertRaises( RuntimeError, p.setValidatedValue, IECore.StringData( "hello" ) )
 		# should raise because it doesn't exist
 		self.assertRaises( RuntimeError, p.setValidatedValue, IECore.StringData( "hello.###.tif" ) )
-		p.setValidatedValue( IECore.StringData( "test/sequences/parameterTest/a.#.tif" ) )
+		p.setValidatedValue( IECore.StringData( os.path.join( self.base_path, "a.#.tif" ) ) )
 
 		p = IECore.FileSequenceParameter( name = "n", description = "d", check = IECore.FileSequenceParameter.CheckType.MustNotExist )
 		# should raise because it's not a valid sequence string
@@ -68,34 +72,34 @@ class TestFileSequenceParameter( unittest.TestCase ) :
 		# should be fine because it's a valid string and no sequence like that exists
 		p.setValidatedValue( IECore.StringData( "hello.###.tif" ) )
 		# should raise because the sequence exists
-		self.assertRaises( RuntimeError, p.setValidatedValue, IECore.StringData( "test/sequences/parameterTest/a.#.tif" ) )
+		self.assertRaises( RuntimeError, p.setValidatedValue, IECore.StringData( os.path.join( self.base_path, "a.#.tif" ) ) )
 
 		p = IECore.FileSequenceParameter( name = "n", description = "d", check = IECore.FileSequenceParameter.CheckType.DontCare )
 		# should raise because it's not a valid sequence string
 		self.assertRaises( RuntimeError, p.setValidatedValue, IECore.StringData( "hello" ) )
 		p.setValidatedValue( IECore.StringData( "hello.###.tif" ) )
-		p.setValidatedValue( IECore.StringData( "test/sequences/parameterTest/a.#.tif" ) )
+		p.setValidatedValue( IECore.StringData( os.path.join( self.base_path, "/a.#.tif" ) ) )
 		# for MustNotExist and DontCare, the getFileSequenceValue does not check the file system. It returns a FileSequence with EmptyFrameList.
 		self.assertEqual( p.getFileSequenceValue().frameList, IECore.EmptyFrameList() )
 
 		p = IECore.FileSequenceParameter( name = "n", description = "d", check = IECore.FileSequenceParameter.CheckType.MustExist )
-		p.setValidatedValue( IECore.StringData( "test/sequences/parameterTest/a.#.tif" ) )
+		p.setValidatedValue( IECore.StringData( os.path.join( self.base_path, "a.#.tif" ) ) )
 		# for MustExist getFileSequence should use ls internally.
-		self.assertEqual( p.getFileSequenceValue(), IECore.ls( "test/sequences/parameterTest/a.#.tif" ) )
-		self.assertEqual( p.getFileSequenceValue( IECore.StringData( "test/sequences/parameterTest/a.#.tif" ) ), IECore.ls( "test/sequences/parameterTest/a.#.tif" ) )
+		self.assertEqual( p.getFileSequenceValue(), IECore.ls( os.path.join( self.base_path, "a.#.tif" ) ) )
+		self.assertEqual( p.getFileSequenceValue( IECore.StringData( os.path.join( self.base_path, "a.#.tif" ) ) ), IECore.ls( os.path.join( self.base_path, "a.#.tif" ) ) )
 
-		p.setFileSequenceValue( IECore.FileSequence( "test/sequences/parameterTest/a.#.tif", IECore.FrameRange( 1, 10 ) ) )
+		p.setFileSequenceValue( IECore.FileSequence( os.path.join( self.base_path, "a.#.tif" ), IECore.FrameRange( 1, 10 ) ) )
 		# Setting a frame range should reflect on the parameter value.
-		self.assertEqual( p.getValue(), IECore.StringData( "test/sequences/parameterTest/a.#.tif 1-10" ) )
-		self.assertEqual( p.getFileSequenceValue(), IECore.ls( "test/sequences/parameterTest/a.#.tif" ) )
-		self.assertEqual( p.getFileSequenceValue( IECore.StringData( "test/sequences/parameterTest/a.#.tif 1-10" ) ), IECore.ls( "test/sequences/parameterTest/a.#.tif" ) )
+		self.assertEqual( p.getValue(), IECore.StringData( os.path.join( self.base_path, "a.#.tif 1-10" ) ) )
+		self.assertEqual( p.getFileSequenceValue(), IECore.ls( os.path.join( self.base_path, "a.#.tif" ) ) )
+		self.assertEqual( p.getFileSequenceValue( IECore.StringData( os.path.join( self.base_path, "a.#.tif 1-10" ) ) ), IECore.ls( os.path.join( self.base_path, "a.#.tif" ) ) )
 
 	def testMinSequenceSize( self ):
 
 		s = IECore.FileSequence( "a.#.tif", IECore.FrameRange( 1, 1 ) )
 		self.mkSequence( s )
 
-		path = IECore.StringData( "test/sequences/parameterTest/a.#.tif" )
+		path = IECore.StringData( os.path.join( self.base_path, "a.#.tif" ) )
 		p = IECore.FileSequenceParameter( name = "n", description = "d", check = IECore.FileSequenceParameter.CheckType.MustExist )
 		# default parameter uses min length 2...
 		self.assertRaises( RuntimeError, p.setValidatedValue, path )
@@ -140,7 +144,7 @@ class TestFileSequenceParameter( unittest.TestCase ) :
 			extensions="tif exr jpg"
 		)
 
-		p.setValidatedValue( IECore.StringData( "test/sequences/parameterTest/test with spaces .#.tif 5-10" ) )
+		p.setValidatedValue( IECore.StringData( os.path.join( self.base_path, "test with spaces .#.tif 5-10" ) ) )
 
 		s = IECore.FileSequence( "test with   spaces  .#.tif", IECore.FrameRange( 5, 10 ) )
 		self.mkSequence( s )
@@ -151,18 +155,18 @@ class TestFileSequenceParameter( unittest.TestCase ) :
 			extensions="tif exr jpg"
 		)
 
-		p.setValidatedValue( IECore.StringData( "test/sequences/parameterTest/test with   spaces  .#.tif 5-10" ) )
+		p.setValidatedValue( IECore.StringData( os.path.join( self.base_path, "test with   spaces  .#.tif 5-10" ) ) )
 
 	def tearDown( self ) :
 
-		directory = "test/sequences"
+		directory = os.path.join( "test", "sequences" )
 
 		if os.path.exists( directory ) :
 
 			shutil.rmtree( directory )
 
 		for f in [
-			"test/IECore/data/fileSequenceParameter.cob"
+			os.path.join( "test", "IECore", "data", "fileSequenceParameter.cob" )
 		] :
 			if os.path.exists( f ) :
 				os.remove( f )

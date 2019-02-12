@@ -35,8 +35,12 @@
 
 """Unit test for HeaderGenerator binding"""
 import os
-import pwd
+import sys
+import platform
 import unittest
+
+if os.name != "nt":
+	import pwd
 
 import IECore
 
@@ -47,13 +51,22 @@ class TestHeaderGenerator(unittest.TestCase):
 
 		header = IECore.HeaderGenerator.header()
 		self.assertEqual( header['ieCoreVersion'].value, IECore.versionString() )
-		( sysname, nodename, release, version, machine ) = os.uname()
+		if os.name != "nt":
+			( sysname, nodename, release, version, machine ) = os.uname()
+			userName = pwd.getpwuid( os.getuid() ).pw_name
+		else:
+			sysname = "Windows"
+			nodename = platform.node().upper()
+			(release, version, build, pf, sp) = sys.getwindowsversion()
+			machine = {"AMD64": "x86_64"}.get( platform.machine(), "x86" )
+			userName = os.environ["USERNAME"]
+
 		self.assertEqual( header["host"]["systemName"].value, sysname )
 		self.assertEqual( header["host"]["nodeName"].value, nodename )
 		self.assertEqual( header["host"]["systemRelease"].value, release )
 		self.assertEqual( header["host"]["systemVersion"].value, version )
 		self.assertEqual( header["host"]["machineName"].value, machine )
-		self.assertEqual( header["userName"].value, pwd.getpwuid( os.getuid() ).pw_name )
+		self.assertEqual( header["userName"].value, userName )
 		self.assertTrue( header.has_key( "timeStamp" ) )
 
 if __name__ == "__main__":
