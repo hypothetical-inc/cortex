@@ -66,7 +66,8 @@ class TestObjectWriter( unittest.TestCase ) :
 		for k in w["header"].getValue().keys() :
 			self.assertEqual( w["header"].getValue()[k], h[k] )
 
-		self.assertEqual( h["host"]["nodeName"].value, socket.gethostname() )
+		nodeName = socket.gethostname().upper() if os.name == "nt" else socket.gethostname()
+		self.assertEqual( h["host"]["nodeName"].value, nodeName )
 		self.assertEqual( h["ieCoreVersion"].value, IECore.versionString() )
 		self.assertEqual( h["typeName"].value, "IntData" )
 
