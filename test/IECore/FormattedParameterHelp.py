@@ -33,6 +33,7 @@
 ##########################################################################
 
 import unittest
+import os
 
 import IECore
 
@@ -40,8 +41,13 @@ class TestFormattedParameterHelp( unittest.TestCase ) :
 
 	def test( self ) :
 
-		a = IECore.ClassLoader( IECore.SearchPath( "test/IECore/ops" ) ).load( "parameterTypes" )()
-		formatter = IECore.WrappedTextFormatter( open( "/dev/null", "w" ) )
+		a = IECore.ClassLoader( IECore.SearchPath( os.path.join( "test", "IECore", "ops" ) ) ).load( "parameterTypes" )()
+		if os.name == "nt":
+			null = "NUL"
+		else:
+			null = "/dev/null"
+
+		formatter = IECore.WrappedTextFormatter( open( null, "w" ) )
 		IECore.formatParameterHelp( a.parameters(), formatter )
 
 if __name__ == "__main__":
