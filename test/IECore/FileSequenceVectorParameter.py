@@ -42,10 +42,10 @@ class TestFileSequenceVectorParameter( unittest.TestCase ) :
 
 	def mkSequence( self, sequence ) :
 
-		directory = "test/sequences/parameterTest"
-
 		for f in sequence.fileNames() :
-			os.system( "touch " + directory + "/" + f )
+			touch_path = os.path.join( self.base_path, f )
+			with open( touch_path, "a" ):
+				os.utime( touch_path, None )
 
 	def test( self ) :
 
@@ -68,7 +68,7 @@ class TestFileSequenceVectorParameter( unittest.TestCase ) :
 		self.assertRaises( RuntimeError, p.setValidatedValue, t )
 
 		t = IECore.StringVectorData()
-		t.append( "test/sequences/parameterTest/a.#.tif" )
+		t.append( os.path.join( self.base_path, "a.#.tif" ) )
 		p.setValidatedValue( t )
 
 		p = IECore.FileSequenceVectorParameter( name = "n", description = "d", check = IECore.FileSequenceVectorParameter.CheckType.MustNotExist )
@@ -85,7 +85,7 @@ class TestFileSequenceVectorParameter( unittest.TestCase ) :
 
 		# should raise because the sequence exists
 		t = IECore.StringVectorData()
-		t.append( "test/sequences/parameterTest/a.#.tif" )
+		t.append( os.path.join( self.base_path, "a.#.tif" ) )
 		self.assertRaises( RuntimeError, p.setValidatedValue, t )
 
 		p = IECore.FileSequenceVectorParameter( name = "n", description = "d", check = IECore.FileSequenceVectorParameter.CheckType.DontCare )
@@ -99,21 +99,21 @@ class TestFileSequenceVectorParameter( unittest.TestCase ) :
 		p.setValidatedValue( t )
 
 		t = IECore.StringVectorData()
-		t.append( "test/sequences/parameterTest/a.#.tif" )
-		t.append( "test/sequences/parameterTest/b.#.tif" )
+		t.append( os.path.join( self.base_path, "a.#.tif" ) )
+		t.append( os.path.join( self.base_path, "b.#.tif" ) )
 		p.setValidatedValue( t )
 
 		fs = p.getFileSequenceValues()
 
 		self.assertEqual( len(fs), 2 )
-		self.assertEqual( fs[0], IECore.ls( "test/sequences/parameterTest/a.#.tif" ) )
-		self.assertEqual( fs[1], IECore.ls( "test/sequences/parameterTest/b.#.tif" ) )
+		self.assertEqual( fs[0], IECore.ls( os.path.join( self.base_path, "a.#.tif" ) ) )
+		self.assertEqual( fs[1], IECore.ls( os.path.join( self.base_path, "b.#.tif" ) ) )
 
 		fs = p.getFileSequenceValues( t )
 
 		self.assertEqual( len(fs), 2 )
-		self.assertEqual( fs[0], IECore.ls( "test/sequences/parameterTest/a.#.tif" ) )
-		self.assertEqual( fs[1], IECore.ls( "test/sequences/parameterTest/b.#.tif" ) )
+		self.assertEqual( fs[0], IECore.ls( os.path.join( self.base_path, "a.#.tif" ) ) )
+		self.assertEqual( fs[1], IECore.ls( os.path.join( self.base_path, "b.#.tif" ) ) )
 
 		p.setFileSequenceValues( [ IECore.FileSequence( "a.###.tif", IECore.FrameRange( 1, 10 ) ) ] )
 
@@ -161,17 +161,17 @@ class TestFileSequenceVectorParameter( unittest.TestCase ) :
 
 	def setUp( self ):
 
-		directory = "test/sequences/parameterTest"
+		self.base_path = os.path.join( "test", "sequences", "parameterTest" )
 
-		if os.path.exists( directory ) :
+		if os.path.exists( self.base_path ) :
 
-			os.system( "rm -rf " + directory )
+			shutil.rmtree( self.base_path )
 
-		os.system( "mkdir -p " + directory )
+		os.makedirs( self.base_path )
 
 	def tearDown( self ):
 
-		directory = "test/sequences"
+		directory = os.path.join( "test", "sequences" )
 
 		if os.path.exists( directory ) :
 
