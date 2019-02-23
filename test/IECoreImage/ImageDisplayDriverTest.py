@@ -213,8 +213,11 @@ class ClientServerDisplayDriverTest(unittest.TestCase):
 			IECoreImage.ClientDisplayDriver( dw, dw, [ "R", "G", "B" ], parameters )
 		except Exception, e :
 			pass
+		if os.name != "nt":
+			self.failUnless( "Could not connect to remote display driver server : Connection refused" in str( e ) )
+		else:
+			self.failUnless( "Could not connect to remote display driver server : No connection could be made because the target machine actively refused it" in str( e ) )
 
-		self.failUnless( "Could not connect to remote display driver server : Connection refused" in str( e ) )
 
 	def testWrongHostException( self ) :
 
@@ -232,7 +235,10 @@ class ClientServerDisplayDriverTest(unittest.TestCase):
 		except Exception, e :
 			pass
 
-		self.failUnless( "Could not connect to remote display driver server : Host not found" in str( e ) )
+		if os.name != "nt":
+			self.failUnless( "Could not connect to remote display driver server : Host not found" in str( e ) )
+		else:
+			self.failUnless( "Could not connect to remote display driver server : No such host is known" in str( e ) )
 
 	def testAcceptsRepeatedData( self ) :
 
