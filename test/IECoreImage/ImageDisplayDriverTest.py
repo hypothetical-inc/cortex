@@ -210,8 +210,12 @@ class ClientServerDisplayDriverTest(unittest.TestCase):
 		dw = imath.Box2i( imath.V2i( 0 ), imath.V2i( 255 ) )
 		self.assertRaises( RuntimeError, IECoreImage.ClientDisplayDriver, dw, dw, [ "R", "G", "B" ], parameters )
 
-		with six.assertRaisesRegex( self, Exception, "Could not connect to remote display driver server : Connection refused" ) :
-			IECoreImage.ClientDisplayDriver( dw, dw, [ "R", "G", "B" ], parameters )
+		if os.name != "nt" :
+			with six.assertRaisesRegex( self, Exception, "Could not connect to remote display driver server : Connection refused" ) :
+				IECoreImage.ClientDisplayDriver( dw, dw, [ "R", "G", "B" ], parameters )
+		else :
+			with six.assertRaisesRegex( self, Exception, "Could not connect to remote display driver server : No connection could be made because the target machine actively refused it" ) :
+				IECoreImage.ClientDisplayDriver( dw, dw, [ "R", "G", "B" ], parameters )
 
 	def testWrongHostException( self ) :
 
@@ -224,8 +228,12 @@ class ClientServerDisplayDriverTest(unittest.TestCase):
 		dw = imath.Box2i( imath.V2i( 0 ), imath.V2i( 255 ) )
 		self.assertRaises( RuntimeError, IECoreImage.ClientDisplayDriver, dw, dw, [ "R", "G", "B" ], parameters )
 
-		with six.assertRaisesRegex( self, Exception, "Could not connect to remote display driver server : Host not found" ) :
-			IECoreImage.ClientDisplayDriver( dw, dw, [ "R", "G", "B" ], parameters )
+		if os.name != "nt" :
+			with six.assertRaisesRegex( self, Exception, "Could not connect to remote display driver server : Host not found" ) :
+				IECoreImage.ClientDisplayDriver( dw, dw, [ "R", "G", "B" ], parameters )
+		else :
+			with six.assertRaisesRegex( self, Exception, "Could not connect to remote display driver server : Host not found" ) :
+				IECoreImage.ClientDisplayDriver( dw, dw, [ "R", "G", "B" ], parameters )
 
 	def testAcceptsRepeatedData( self ) :
 
