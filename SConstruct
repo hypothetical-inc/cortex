@@ -2068,6 +2068,13 @@ if env["WITH_GL"] and doConfigure :
 					"OpenGL",
 				]
 			)
+		elif env["PLATFORM"] == "win32" :
+			glEnv.Append(
+				LIBS = [
+					glEnv.subst( "opengl$GLEW_LIB_SUFFIX" ),
+					glEnv.subst( "glu$GLEW_LIB_SUFFIX" ),
+				]
+			)
 		else :
 			glEnv.Append(
 				LIBS = [
