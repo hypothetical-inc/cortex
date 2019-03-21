@@ -1389,6 +1389,16 @@ pythonEnv.Append( LIBS = [
 	]
 )
 
+if doConfigure :
+
+	c = Configure( pythonEnv )
+
+	if not c.CheckHeader( "Python.h", "\"\"", "C++" ) :
+		sys.stderr.write( "ERROR : unable to find the Python headers, check PYTHON_INCLUDE_PATH.\n" )
+		Exit( 1 )
+	
+	c.Finish()
+
 pythonModuleEnv = pythonEnv.Clone()
 
 pythonModuleEnv["SHLIBPREFIX"] = ""
