@@ -3146,7 +3146,6 @@ if doConfigure :
 
 		usdSources = sorted( glob.glob( "contrib/IECoreUSD/src/IECoreUSD/*.cpp" ) )
 		usdPythonScripts = glob.glob( "contrib/IECoreUSD/python/IECoreUSD/*.py" )
-		usdPythonSources = sorted( glob.glob( "contrib/IECoreUSD/src/IECoreUSD/bindings/*.cpp" ) )
 
 		# we can't append this before configuring, as then it gets built as
 		# part of the configure process
@@ -3167,22 +3166,12 @@ if doConfigure :
 		usdEnv.Alias( "installLib", [ usdLibraryInstall ] )
 
 		# python module
-		usdPythonModuleEnv.Append(
-			LIBS = [
-				os.path.basename( coreEnv.subst( "$INSTALL_LIB_NAME" ) ),
-				os.path.basename( corePythonEnv.subst( "$INSTALL_PYTHONLIB_NAME" ) ),
-				os.path.basename( usdEnv.subst( "$INSTALL_LIB_NAME" ) ),
-			]
-		)
-		usdPythonModule = usdPythonModuleEnv.SharedLibrary( "contrib/IECoreUSD/python/IECoreUSD/_IECoreUSD", usdPythonSources )
-		usdPythonModuleEnv.Depends( usdPythonModule, usdLibrary )
-
-		usdPythonModuleInstall = usdPythonModuleEnv.Install( "$INSTALL_PYTHON_DIR/IECoreUSD", usdPythonScripts + usdPythonModule )
+		usdPythonModuleInstall = usdPythonModuleEnv.Install( "$INSTALL_PYTHON_DIR/IECoreUSD", usdPythonScripts )
 		usdPythonModuleEnv.AddPostAction( "$INSTALL_PYTHON_DIR/IECoreUSD", lambda target, source, env : makeSymLinks( usdPythonModuleEnv, usdPythonModuleEnv["INSTALL_PYTHON_DIR"] ) )
 		usdPythonModuleEnv.Alias( "install", usdPythonModuleInstall )
 		usdPythonModuleEnv.Alias( "installUSD", usdPythonModuleInstall )
 
-		Default( [ usdLibrary, usdPythonModule ] )
+		Default( [ usdLibrary ] )
 
 		# tests
 		usdTestEnv = testEnv.Clone()
