@@ -2610,7 +2610,9 @@ houdiniEnvSets = {
 
 houdiniEnvAppends = {
 	"CXXFLAGS" : [
-		"-std=$CXXSTD",
+		"$HOUDINI_CXX_FLAGS",
+		"-DMAKING_DSO",
+		"-DIECoreHoudini_EXPORTS",
 	],
 
 	"CPPFLAGS" : [
