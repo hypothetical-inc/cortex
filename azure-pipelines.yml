@@ -8,10 +8,11 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+- *
 
 variables:
   BUILD_DIR: $(System.ArtifactsDirectory)
+  BUILD_NUMBER: $(Build.BuildNumber)
 
 stages:
   - stage: Build
@@ -79,6 +80,7 @@ stages:
               cd $(Build.SourcesDirectory)
             displayName: Expand Dependencies
           - script: python config/azure/setAppveyorVersion.py
+            displayName: Set Build Number
           - script: |
               call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
               scons install installDoc --debug=findlibs ^

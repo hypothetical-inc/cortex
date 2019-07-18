@@ -57,5 +57,5 @@ with open("version.txt", "w") as outfile:
         versionInfo.get("minorVersion", "0"),
         versionInfo.get("patchVersion", "0"),
         versionInfo.get("versionSuffix", "0"),
-        os.environ["Build.BuildNumber"]
+        os.environ["BUILD_NUMBER"]  # set in the azure-pipelines.yml variables
     ))
