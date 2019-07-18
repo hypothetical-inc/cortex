@@ -52,9 +52,10 @@ with open("SConstruct") as infile:
                 versionInfo[key] = str(match.groups()[0])
 
 with open("version.txt", "w") as outfile:
-    outfile.write("{}.{}.{}.{}".format(
+    print("##vso[build.updatebuildnumber]{}.{}.{}.{}.{}".format(
         versionInfo.get("majorVersion", "0"),
         versionInfo.get("minorVersion", "0"),
         versionInfo.get("patchVersion", "0"),
-        versionInfo.get("versionSuffix", "0")
+        versionInfo.get("versionSuffix", "0"),
+        os.environ["Build.BuildNumber"]
     ))
