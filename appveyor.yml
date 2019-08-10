@@ -121,6 +121,12 @@ build: off
 
 artifacts:
   - path: cortex-%VERSION%-windows.zip
+  - path: test/IECore/results.txt
+  - path: test/IECore/resultsPython.txt
+  - path: test/IECoreImage/results.txt
+  - path: test/IECoreScene/results.txt
+  - path: test/IECoreAlembic/results.txt
+  - path: contrib/IECoreAppleseed/test/results.txt
 #   # pushing a single file
 #   - path: test.zip
 
