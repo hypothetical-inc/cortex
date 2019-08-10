@@ -53,6 +53,7 @@ install:
   - appveyor UpdateBuild -Version "%VERSION%.%APPVEYOR_BUILD_NUMBER%"
   - cmd: >-
       scons install installDoc --debug=findlibs ^
+      testCore ^
       -j 2 ^
       INSTALL_PREFIX=%BUILD_DIR% ^
       INSTALL_DOC_DIR=%BUILD_DIR%\doc\cortex ^
