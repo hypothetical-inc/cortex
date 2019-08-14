@@ -52,8 +52,26 @@ class BoundedKDTree<BoundIterator>::AxisSort
 
 		bool operator() ( BoundIterator i, BoundIterator j )
 		{
-			return VectorTraits< BaseType >::get( boxCenter(*i), m_axis)
-				< VectorTraits< BaseType >::get( boxCenter(*j), m_axis);
+			// if the axes being compared are equal, sort based on the full vector
+			if( VectorTraits< BaseType >::get( boxCenter(*i), m_axis)
+				== VectorTraits< BaseType >::get( boxCenter(*j), m_axis))
+			{
+				for(unsigned int axis = 0; axis < VectorTraits< BaseType >::dimensions(); axis ++ )
+				{
+					if( VectorTraits< BaseType >::get( boxCenter(*i), axis)
+						< VectorTraits< BaseType >::get( boxCenter(*j), axis) )
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+			else
+			{
+				return VectorTraits< BaseType >::get( boxCenter(*i), m_axis)
+					< VectorTraits< BaseType >::get( boxCenter(*j), m_axis);
+			}
+			
 		}
 
 	private :
