@@ -986,7 +986,7 @@ if Environment()["PLATFORM"]=="darwin" :
 elif Environment()["PLATFORM"] != "win32":
 	libraryPathEnvVar = "LD_LIBRARY_PATH"
 else:
-	libraryPathEnvVar = "PATH"
+	libraryPathEnvVar = ""
 
 o.Add(
 	"TEST_LIBRARY_PATH_ENV_VAR",
@@ -1449,8 +1449,10 @@ if env["PLATFORM"] != "win32" :
 	testEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] = testEnvLibPath
 	testEnv["ENV"][libraryPathEnvVar] = testEnvLibPath
 else :
-	testEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += testEnvLibPath
-	testEnv["ENV"][libraryPathEnvVar] += testEnvLibPath
+	if testEnv["TEST_LIBRARY_PATH_ENV_VAR"]:
+		testEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += testEnvLibPath
+	if libraryPathEnvVar:
+		testEnv["ENV"][libraryPathEnvVar] += testEnvLibPath
 
 testEnv["ENV"]["IECORE_OP_PATHS"] = "test/IECore/ops"
 
@@ -2408,7 +2410,8 @@ if doConfigure :
 		mayaTestEnv = testEnv.Clone()
 
 		mayaTestLibPaths = mayaEnv.subst( os.path.pathsep.join( mayaPythonModuleEnv["LIBPATH"] ) )
-		mayaTestEnv["ENV"][mayaTestEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + mayaTestLibPaths
+		if mayaTestEnv["TEST_LIBRARY_PATH_ENV_VAR"] :
+			mayaTestEnv["ENV"][mayaTestEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + mayaTestLibPaths
 		mayaTestEnv["ENV"][libraryPathEnvVar] += os.path.pathsep + mayaTestLibPaths
 
 		mayaTestEnv["ENV"]["PATH"] = mayaEnv.subst( "$MAYA_ROOT/bin" + os.path.pathsep ) + mayaEnv["ENV"]["PATH"]
@@ -2875,7 +2878,8 @@ if doConfigure :
 		houdiniTestEnv = testEnv.Clone()
 
 		houdiniTestLibPaths = houdiniEnv.subst( os.path.pathsep.join( houdiniPythonModuleEnv["LIBPATH"] ) )
-		houdiniTestEnv["ENV"][houdiniTestEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + houdiniTestLibPaths
+		if houdiniTestEnv["TEST_LIBRARY_PATH_ENV_VAR"] :
+			houdiniTestEnv["ENV"][houdiniTestEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + houdiniTestLibPaths
 		houdiniTestEnv["ENV"][libraryPathEnvVar] += os.path.pathsep + houdiniTestLibPaths
 
 		houdiniTestEnv["ENV"]["PATH"] = houdiniEnv.subst( "$HOUDINI_ROOT/bin" + os.path.pathsep ) + houdiniEnv["ENV"]["PATH"]
@@ -3047,7 +3051,8 @@ if doConfigure :
 		# tests
 		arnoldTestEnv = testEnv.Clone()
 		arnoldTestEnv["ENV"]["PYTHONPATH"] += os.path.pathsep + "./contrib/IECoreArnold/python" + os.path.pathsep + arnoldEnv.subst( "$ARNOLD_ROOT/python" )
-		arnoldTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + arnoldEnv.subst( os.path.pathsep.join( arnoldPythonModuleEnv["LIBPATH"] ) )
+		if testEnv["TEST_LIBRARY_PATH_ENV_VAR"]:
+			arnoldTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + arnoldEnv.subst( os.path.pathsep.join( arnoldPythonModuleEnv["LIBPATH"] ) )
 		arnoldTestEnv["ENV"]["PATH"] = arnoldEnv.subst( "$ARNOLD_ROOT/bin" ) + os.path.pathsep + arnoldTestEnv["ENV"]["PATH"]
 		arnoldTestEnv["ENV"]["ARNOLD_PLUGIN_PATH"] = "contrib/IECoreArnold/test/IECoreArnold/plugins"
 		arnoldTest = arnoldTestEnv.Command( "contrib/IECoreArnold/test/IECoreArnold/results.txt", arnoldPythonModule, pythonExecutable + " $TEST_ARNOLD_SCRIPT" )
@@ -3172,7 +3177,8 @@ if doConfigure :
 		usdPythonPath = os.path.join(usdLibPath, "python")
 
 		usdTestEnv["ENV"]["PYTHONPATH"] += os.path.pathsep + usdPythonPath
-		usdTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + usdLibPath
+		if testEnv["TEST_LIBRARY_PATH_ENV_VAR"] :
+			usdTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + usdLibPath
 
 		usdTest = usdTestEnv.Command( "contrib/IECoreUSD/test/IECoreUSD/results.txt", usdPythonScripts[0], pythonExecutable + " $TEST_USD_SCRIPT" )
 		NoCache( usdTest )
@@ -3305,7 +3311,8 @@ if doConfigure :
 		# tests
 		alembicTestEnv = testEnv.Clone()
 		alembicTestLibPaths = alembicEnv.subst( os.path.pathsep.join( alembicPythonModuleEnv["LIBPATH"] ) )
-		alembicTestEnv["ENV"][alembicTestEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + alembicTestLibPaths
+		if alembicTestEnv["TEST_LIBRARY_PATH_ENV_VAR"] :
+			alembicTestEnv["ENV"][alembicTestEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + alembicTestLibPaths
 		alembicTestEnv["ENV"]["PYTHONPATH"] += os.path.pathsep + "./contrib/IECoreAlembic/python"
 		alembicTest = alembicTestEnv.Command( "contrib/IECoreAlembic/test/IECoreAlembic/results.txt", alembicPythonModule, pythonExecutable + " $TEST_ALEMBIC_SCRIPT" )
 		NoCache( alembicTest )
@@ -3463,7 +3470,8 @@ if doConfigure :
 		# tests
 		appleseedTestEnv = testEnv.Clone()
 		appleseedTestEnv["ENV"]["PYTHONPATH"] += os.path.pathsep + "./contrib/IECoreAppleseed/python" + os.path.pathsep + appleseedEnv.subst( "$APPLESEED_LIB_PATH/python2.7" )
-		appleseedTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + appleseedEnv.subst( os.path.pathsep.join( appleseedPythonModuleEnv["LIBPATH"] ) )
+		if testEnv["TEST_LIBRARY_PATH_ENV_VAR"] :
+			appleseedTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + appleseedEnv.subst( os.path.pathsep.join( appleseedPythonModuleEnv["LIBPATH"] ) )
 		appleseedTestEnv["ENV"]["PATH"] = appleseedEnv.subst( "$APPLESEED_ROOT/bin" ) + os.path.pathsep + appleseedTestEnv["ENV"]["PATH"]
 		appleseedTestEnv["ENV"]["APPLESEED_SEARCHPATH"] = os.getcwd() + "/contrib/IECoreAppleseed/test/IECoreAppleseed/plugins"
 		appleseedTest = appleseedTestEnv.Command( "contrib/IECoreAppleseed/test/IECoreAppleseed/results.txt", appleseedPythonModule, pythonExecutable + " $TEST_APPLESEED_SCRIPT" )
