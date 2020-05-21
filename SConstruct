@@ -986,7 +986,7 @@ if Environment()["PLATFORM"]=="darwin" :
 elif Environment()["PLATFORM"] != "win32":
 	libraryPathEnvVar = "LD_LIBRARY_PATH"
 else:
-	libraryPathEnvVar = ""
+	libraryPathEnvVar = "UNUSED_LIBRARY_PATH"
 
 o.Add(
 	"TEST_LIBRARY_PATH_ENV_VAR",
@@ -1467,10 +1467,8 @@ if env["PLATFORM"] != "win32" :
 	testEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] = testEnvLibPath
 	testEnv["ENV"][libraryPathEnvVar] = testEnvLibPath
 else :
-	if testEnv["TEST_LIBRARY_PATH_ENV_VAR"]:
-		testEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += testEnvLibPath
 	if libraryPathEnvVar:
-		testEnv["ENV"][libraryPathEnvVar] += testEnvLibPath
+		testEnv["ENV"][libraryPathEnvVar] = testEnvLibPath
 
 testEnv["ENV"]["IECORE_OP_PATHS"] = "test/IECore/ops"
 
@@ -3216,7 +3214,7 @@ if doConfigure :
 		if testEnv["TEST_LIBRARY_PATH_ENV_VAR"] :
 			usdTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + usdLibPath
 
-		usdTest = usdTestEnv.Command( "contrib/IECoreUSD/test/IECoreUSD/results.txt", usdPythonModule, "$PYTHON $TEST_USD_SCRIPT --verbose" )
+		usdTest = usdTestEnv.Command( "contrib/IECoreUSD/test/IECoreUSD/results.txt", usdLibrary, "$PYTHON $TEST_USD_SCRIPT --verbose" )
 		NoCache( usdTest )
 		usdTestEnv.Alias( "testUSD", usdTest )
 
@@ -3350,7 +3348,7 @@ if doConfigure :
 		if alembicTestEnv["TEST_LIBRARY_PATH_ENV_VAR"] :
 			alembicTestEnv["ENV"][alembicTestEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += os.path.pathsep + alembicTestLibPaths
 		alembicTestEnv["ENV"]["PYTHONPATH"] += os.path.pathsep + "./contrib/IECoreAlembic/python"
-		alembicTest = alembicTestEnv.Command( "contrib/IECoreAlembic/test/IECoreAlembic/results.txt", alembicPythonModule, pythonExecutable + " $TEST_ALEMBIC_SCRIPT --verbose" )
+		alembicTest = alembicTestEnv.Command( "contrib/IECoreAlembic/test/IECoreAlembic/results.txt", alembicPythonModule, "$PYTHON $TEST_ALEMBIC_SCRIPT --verbose" )
 		NoCache( alembicTest )
 		alembicTestEnv.Alias( "testAlembic", alembicTest )
 
