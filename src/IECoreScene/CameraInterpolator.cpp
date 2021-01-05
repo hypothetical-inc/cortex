@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,37 +32,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MurmurHash.h"
+#include "IECoreScene/Camera.h"
 
-#include <iomanip>
-#include <sstream>
+#include "IECore/DataAlgo.h"
+#include "IECore/ObjectInterpolator.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 
-MurmurHash::MurmurHash()
-	:	m_h1( 0 ), m_h2( 0 )
+namespace
 {
+
+CameraPtr interpolateCamera( const Camera *c0, const Camera *c1, double x )
+{
+	CameraPtr result = c0->copy();
+
+	// Blind data
+
+	CompoundDataPtr interpolatedBlindData = boost::static_pointer_cast<CompoundData>(
+		linearObjectInterpolation( c0->blindData(), c1->blindData(), x )
+	);
+	result->blindData()->writable() = interpolatedBlindData->readable();
+
+	// Parameters
+
+	CompoundDataPtr interpolatedParameters = boost::static_pointer_cast<CompoundData>(
+		linearObjectInterpolation( c0->parametersData(), c1->parametersData(), x )
+	);
+	result->parameters() = interpolatedParameters->readable();
+
+	return result;
 }
 
-MurmurHash::MurmurHash( const MurmurHash &other )
-	:	m_h1( other.m_h1 ), m_h2( other.m_h2 )
-{
-}
+IECore::InterpolatorDescription<IECoreScene::Camera> g_description( interpolateCamera );
 
-MurmurHash::MurmurHash( uint64_t h1, uint64_t h2 )
-	:	m_h1( h1 ), m_h2( h2 )
-{
-}
-
-std::string MurmurHash::toString() const
-{
-	std::stringstream s;
-	s << std::hex << std::setfill( '0' ) << std::setw( 16 ) << m_h1 << std::setw( 16 ) << m_h2;
-	return s.str();
-}
-
-std::ostream &IECore::operator << ( std::ostream &o, const MurmurHash &hash )
-{
-	o << hash.toString();
-	return o;
-}
+} // namespace

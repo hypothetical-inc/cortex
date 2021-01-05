@@ -50,7 +50,7 @@ import re
 import subprocess
 import platform
 
-EnsureSConsVersion( 0, 97 )
+EnsureSConsVersion( 3, 0, 2 )  # Substfile is a default builder as of 3.0.2
 SConsignFile()
 
 ieCoreMilestoneVersion = 10 # for announcing major milestones - may contain all of the below
@@ -159,6 +159,13 @@ o.Add(
 	"to link against the debug versions of the libraries, or to link against "
 	"unversioned libraries.",
 	"-${BOOST_MAJOR_VERSION}_${BOOST_MINOR_VERSION}_${BOOST_PATCH_VERSION}",
+)
+
+o.Add(
+	"BOOST_PYTHON_LIB_SUFFIX",
+	"The suffix appended to the names of the python boost libraries. "
+	"You can modify this so that the correct python library name is used, "
+	"likely related to the specific python version.",
 )
 
 # OpenEXR options
@@ -1126,8 +1133,8 @@ if env["PLATFORM"] != "win32" :
 
 	elif env["PLATFORM"]=="posix" :
 		if "g++" in os.path.basename( env["CXX"] ) :
-			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"] )
-			gccVersion = gccVersion.decode().strip()
+			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"], universal_newlines=True )
+			gccVersion = gccVersion.strip()
 			gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
 			if gccVersion >= [ 5, 1 ] :
 				env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
@@ -1185,7 +1192,8 @@ else:
 			"/GR", # enable RTTI
 			"/TP", # treat all files as c++ (vs C)
 			"/FC", # display full paths in diagnostics
-			"/EHsc\";\"/MP" # catch c++ exceptions only
+			"/EHsc", # catch c++ exceptions only
+			"/MP",  # enable multiprocessing of builds
 		]
 	)
 
@@ -1380,6 +1388,7 @@ def pythonVersion( pythonEnv ) :
 	return subprocess.check_output(
 		[ pythonExecutable, "-c", 'import sys; print( \"%s.%s\" % sys.version_info[:2] )' ],
 		env = env,
+		universal_newlines = True
 	).strip()
 
 pythonEnv = env.Clone()
@@ -1424,12 +1433,15 @@ else :
 
 pythonEnv.Append( CPPFLAGS = "-DBOOST_PYTHON_MAX_ARITY=20" )
 
-boostPythonLibSuffix = ""
-if ( int( env["BOOST_MAJOR_VERSION"] ), int( env["BOOST_MINOR_VERSION"] ) ) >= ( 1, 67 ) :
-	boostPythonLibSuffix = pythonEnv["PYTHON_VERSION"].replace( ".", "" )
+# if BOOST_PYTHON_LIB_SUFFIX is provided, use it
+boostPythonLibSuffix = pythonEnv.get( "BOOST_PYTHON_LIB_SUFFIX", None )
+if boostPythonLibSuffix is None :
+	boostPythonLibSuffix = pythonEnv["BOOST_LIB_SUFFIX"]
+	if ( int( env["BOOST_MAJOR_VERSION"] ), int( env["BOOST_MINOR_VERSION"] ) ) >= ( 1, 67 ) :
+		boostPythonLibSuffix = pythonEnv["PYTHON_VERSION"].replace( ".", "" ) + boostPythonLibSuffix
 
 pythonEnv.Append( LIBS = [
-		"boost_python" + boostPythonLibSuffix + pythonEnv["BOOST_LIB_SUFFIX"],
+		"boost_python" + boostPythonLibSuffix,
 	]
 )
 
@@ -1691,14 +1703,19 @@ coreEnv.Alias( "installLib", [ coreLibraryInstall ] )
 # headers
 
 # take special care for the Version header
-sedSubstitutions = "s/IE_CORE_MILESTONEVERSION/$IECORE_MILESTONE_VERSION/g"
-sedSubstitutions += "; s/IE_CORE_MAJORVERSION/$IECORE_MAJOR_VERSION/g"
-sedSubstitutions += "; s/IE_CORE_MINORVERSION/$IECORE_MINOR_VERSION/g"
-sedSubstitutions += "; s/IE_CORE_PATCHVERSION/$IECORE_PATCH_VERSION/g"
 # windows seems to return the glob matches with a delightful mix of path seperators (eg "include/IECore\\Version.h")
 versionHeader = os.path.join( "include/IECore", "Version.h" )
 coreHeaders.remove( versionHeader )
-versionHeaderInstall = env.Command( "$INSTALL_HEADER_DIR/IECore/Version.h", versionHeader, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+versionHeaderInstall = env.Substfile(
+	"$INSTALL_HEADER_DIR/IECore/Version.h",
+	versionHeader,
+	SUBST_DICT = {
+		"IE_CORE_MILESTONEVERSION": "$IECORE_MILESTONE_VERSION",
+		"IE_CORE_MAJORVERSION": "$IECORE_MAJOR_VERSION",
+		"IE_CORE_MINORVERSION": "$IECORE_MINOR_VERSION",
+		"IE_CORE_PATCHVERSION": "$IECORE_PATCH_VERSION",
+	}
+)
 # handle the remaining core headers
 headerInstall = coreEnv.Install( "$INSTALL_HEADER_DIR/IECore", coreHeaders )
 coreEnv.AddPostAction( "$INSTALL_HEADER_DIR/IECore", lambda target, source, env : makeSymLinks( coreEnv, coreEnv["INSTALL_HEADER_DIR"] ) )
@@ -3541,10 +3558,15 @@ if doConfigure :
 
 		sys.stdout.write( "yes\n" )
 
-		if env["PLATFORM"] != "win32":
-			docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "sed s/!CORTEX_VERSION!/$IECORE_VERSION/g $SOURCE | $DOXYGEN -" )
-		else:
-			docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "powershell -Command \"cat $SOURCE | % { $$_ -replace \\\"\!CORTEX_VERSION\!\\\",\\\"$IECORE_VERSION\\\" } | $DOXYGEN -\"" )
+		substDocs = docEnv.Substfile(
+			"doc/config/Doxyfile",
+			SUBST_DICT = {
+				"!CORTEX_VERSION!" : env.subst( "$IECORE_VERSION" ),
+			}
+		)
+		docEnv.NoCache( substDocs )
+
+		docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "$DOXYGEN $SOURCE")
 		docEnv.NoCache( docs )
 
 		for modulePath in ( "python/IECore", "python/IECoreGL", "python/IECoreNuke", "python/IECoreMaya", "python/IECoreHoudini" ) :
