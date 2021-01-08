@@ -3218,22 +3218,12 @@ if doConfigure :
 		usdEnv.Alias( "installUSD", usdHeaderInstall )
 
 		# python module
-		usdPythonModuleEnv.Append(
-			LIBS = [
-				os.path.basename( coreEnv.subst( "$INSTALL_LIB_NAME" ) ),
-				os.path.basename( corePythonEnv.subst( "$INSTALL_PYTHONLIB_NAME" ) ),
-				os.path.basename( usdEnv.subst( "$INSTALL_LIB_NAME" ) ),
-			]
-		)
-		usdPythonModule = usdPythonModuleEnv.SharedLibrary( "contrib/IECoreUSD/python/IECoreUSD/_IECoreUSD", usdPythonSources )
-		usdPythonModuleEnv.Depends( usdPythonModule, usdLibrary )
-
-		usdPythonModuleInstall = usdPythonModuleEnv.Install( "$INSTALL_PYTHON_DIR/IECoreUSD", usdPythonScripts + usdPythonModule )
+		usdPythonModuleInstall = usdPythonModuleEnv.Install( "$INSTALL_PYTHON_DIR/IECoreUSD", usdPythonScripts )
 		usdPythonModuleEnv.AddPostAction( "$INSTALL_PYTHON_DIR/IECoreUSD", lambda target, source, env : makeSymLinks( usdPythonModuleEnv, usdPythonModuleEnv["INSTALL_PYTHON_DIR"] ) )
 		usdPythonModuleEnv.Alias( "install", usdPythonModuleInstall )
 		usdPythonModuleEnv.Alias( "installUSD", usdPythonModuleInstall )
 
-		Default( [ usdLibrary, usdPythonModule ] )
+		Default( [ usdLibrary ] )
 
 		# tests
 		usdTestEnv = testEnv.Clone()
@@ -3245,7 +3235,7 @@ if doConfigure :
 		usdTestEnv["ENV"]["PYTHONPATH"] += ":" + usdPythonPath
 		usdTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += ":" + usdLibPath
 
-		usdTest = usdTestEnv.Command( "contrib/IECoreUSD/test/IECoreUSD/results.txt", usdPythonModule, "$PYTHON $TEST_USD_SCRIPT --verbose" )
+		usdTest = usdTestEnv.Command( "contrib/IECoreUSD/test/IECoreUSD/results.txt", usdLibrary, "$PYTHON $TEST_USD_SCRIPT --verbose" )
 		usdTestEnv.Depends( usdTest, [ corePythonModule + scenePythonModule ]  )
 		NoCache( usdTest )
 		usdTestEnv.Alias( "testUSD", usdTest )
