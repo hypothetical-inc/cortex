@@ -3050,6 +3050,10 @@ if doConfigure :
 				os.path.basename( arnoldEnv.subst( "$INSTALL_LIB_NAME" ) ),
 			]
 		)
+		if env["PLATFORM"] == "win32" :
+			arnoldDriverEnv.Append(
+				LIBS = [ "ai" ]
+			)
 
 		# library
 		arnoldLibrary = arnoldEnv.SharedLibrary( "lib/" + os.path.basename( arnoldEnv.subst( "$INSTALL_ARNOLDLIB_NAME" ) ), arnoldSources )
