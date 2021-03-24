@@ -1586,7 +1586,7 @@ def makeSymLink( target, source ) :
 
 def readLinesMinusLicense( f ) :
 
-	if isinstance( f, basestring ) :
+	if isinstance( f, str ) :
 		f = open( f, "r" )
 
 	result = []
