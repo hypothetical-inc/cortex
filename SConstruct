@@ -55,7 +55,7 @@ SConsignFile()
 
 ieCoreMilestoneVersion = 10 # for announcing major milestones - may contain all of the below
 ieCoreMajorVersion = 1 # backwards-incompatible changes
-ieCoreMinorVersion = 4 # new backwards-compatible features
+ieCoreMinorVersion = 5 # new backwards-compatible features
 ieCorePatchVersion = 0 # bug fixes
 ieCoreVersionSuffix = "" # used for alpha/beta releases. Example: "a1", "b2", etc.
 
@@ -317,6 +317,12 @@ o.Add(
 	"PYTHON_LINK_FLAGS",
 	"Flags to use when linking python modules. If unspecified this will be discovered automatically using PYTHON_CONFIG.",
 	""
+)
+
+o.Add(
+	"PYTHON_LIB_PATH",
+	"The path to the Python library directory. If unspecified this will be discovered automatically using PYTHON_CONFIG.",
+	"",
 )
 
 # Renderman options
@@ -1090,6 +1096,7 @@ dependencyIncludes = [
 env.Prepend(
 	LIBPATH = [
 		"./lib",
+		"$PYTHON_LIB_PATH",
 		"$TBB_LIB_PATH",
 		"$BOOST_LIB_PATH",
 		"$OPENEXR_LIB_PATH",
@@ -1579,7 +1586,7 @@ def makeSymLink( target, source ) :
 
 def readLinesMinusLicense( f ) :
 
-	if isinstance( f, basestring ) :
+	if isinstance( f, str ) :
 		f = open( f, "r" )
 
 	result = []
@@ -3050,6 +3057,10 @@ if doConfigure :
 				os.path.basename( arnoldEnv.subst( "$INSTALL_LIB_NAME" ) ),
 			]
 		)
+		if env["PLATFORM"] == "win32" :
+			arnoldDriverEnv.Append(
+				LIBS = [ "ai" ]
+			)
 
 		# library
 		arnoldLibrary = arnoldEnv.SharedLibrary( "lib/" + os.path.basename( arnoldEnv.subst( "$INSTALL_ARNOLDLIB_NAME" ) ), arnoldSources )
@@ -3221,22 +3232,12 @@ if doConfigure :
 		usdEnv.Alias( "installUSD", usdHeaderInstall )
 
 		# python module
-		usdPythonModuleEnv.Append(
-			LIBS = [
-				os.path.basename( coreEnv.subst( "$INSTALL_LIB_NAME" ) ),
-				os.path.basename( corePythonEnv.subst( "$INSTALL_PYTHONLIB_NAME" ) ),
-				os.path.basename( usdEnv.subst( "$INSTALL_LIB_NAME" ) ),
-			]
-		)
-		usdPythonModule = usdPythonModuleEnv.SharedLibrary( "contrib/IECoreUSD/python/IECoreUSD/_IECoreUSD", usdPythonSources )
-		usdPythonModuleEnv.Depends( usdPythonModule, usdLibrary )
-
-		usdPythonModuleInstall = usdPythonModuleEnv.Install( "$INSTALL_PYTHON_DIR/IECoreUSD", usdPythonScripts + usdPythonModule )
+		usdPythonModuleInstall = usdPythonModuleEnv.Install( "$INSTALL_PYTHON_DIR/IECoreUSD", usdPythonScripts )
 		usdPythonModuleEnv.AddPostAction( "$INSTALL_PYTHON_DIR/IECoreUSD", lambda target, source, env : makeSymLinks( usdPythonModuleEnv, usdPythonModuleEnv["INSTALL_PYTHON_DIR"] ) )
 		usdPythonModuleEnv.Alias( "install", usdPythonModuleInstall )
 		usdPythonModuleEnv.Alias( "installUSD", usdPythonModuleInstall )
 
-		Default( [ usdLibrary, usdPythonModule ] )
+		Default( [ usdLibrary ] )
 
 		# tests
 		usdTestEnv = testEnv.Clone()
@@ -3248,7 +3249,7 @@ if doConfigure :
 		usdTestEnv["ENV"]["PYTHONPATH"] += ":" + usdPythonPath
 		usdTestEnv["ENV"][testEnv["TEST_LIBRARY_PATH_ENV_VAR"]] += ":" + usdLibPath
 
-		usdTest = usdTestEnv.Command( "contrib/IECoreUSD/test/IECoreUSD/results.txt", usdPythonModule, "$PYTHON $TEST_USD_SCRIPT --verbose" )
+		usdTest = usdTestEnv.Command( "contrib/IECoreUSD/test/IECoreUSD/results.txt", usdLibrary, "$PYTHON $TEST_USD_SCRIPT --verbose" )
 		usdTestEnv.Depends( usdTest, [ corePythonModule + scenePythonModule ]  )
 		NoCache( usdTest )
 		usdTestEnv.Alias( "testUSD", usdTest )
