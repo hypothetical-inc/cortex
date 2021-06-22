@@ -1,3 +1,8 @@
+# No Longer Maintained #
+Now that all of the Windows updates this repository was meant to include have been added to the main Cortex repository, this repository is not archived.
+
+If you would like to contribute, go to the [ImageEngine Cortex repository](https://github.com/ImageEngine/cortex).
+
 ![Cortex](graphics/CortexLogo.svg)
 
 
